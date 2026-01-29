@@ -53,15 +53,15 @@ body{display:flex;flex-direction:column}
 .logo svg{display:block}
 .header-title{display:flex;flex-direction:column;gap:2px}
 .header-title h1{font-family:var(--font-head);font-size:16px;font-weight:900;letter-spacing:3px;color:var(--cyan);position:relative}
-.subtitle{font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase}
+.subtitle{font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:upperse}
 .header-nav{display:flex;gap:2px;margin-left:auto}
 .nav-tab{font-family:var(--font-tech);font-size:10px;letter-spacing:2px;padding:8px 16px;background:transparent;border:1px solid transparent;
-  color:var(--text-dim);cursor:pointer;text-transform:uppercase;transition:all .2s}
+  color:var(--text-dim);cursor:pointer;text-transform:upperse;transition:all .2s}
 .nav-tab:hover{color:var(--text);border-color:var(--border)}
 .nav-tab.active{color:var(--cyan);border-color:var(--cyan);background:var(--cyan-ghost)}
 .header-actions{display:flex;gap:6px}
 .action-btn{font-family:var(--font-tech);font-size:9px;letter-spacing:1px;padding:6px 12px;background:transparent;
-  border:1px solid var(--border);color:var(--text-dim);cursor:pointer;text-transform:uppercase;transition:all .2s}
+  border:1px solid var(--border);color:var(--text-dim);cursor:pointer;text-transform:upperse;transition:all .2s}
 .action-btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px var(--cyan-ghost)}
 .header-x-link{display:flex;align-items:center;padding:6px;border:1px solid var(--border);transition:all .2s;border-radius:0}
 .header-x-link:hover{border-color:var(--cyan);background:var(--cyan-ghost)}
@@ -92,9 +92,9 @@ body{display:flex;flex-direction:column}
 
 /* === CONTROL PANEL === */
 .field{margin-bottom:10px}
-.field label{display:block;font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
-.ca-display{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);padding:6px 8px}
-.ca-display span{font-family:var(--font-mono);font-size:11px;color:var(--gold);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field label{display:block;font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:upperse;margin-bottom:4px}
+.-display{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);padding:6px 8px}
+.-display span{font-family:var(--font-mono);font-size:11px;color:var(--gold);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .copy-btn{font-family:var(--font-tech);font-size:8px;letter-spacing:1px;padding:3px 8px;background:transparent;
   border:1px solid var(--cyan-dim);color:var(--cyan);cursor:pointer;transition:all .2s;flex-shrink:0}
 .copy-btn:hover{background:var(--cyan-ghost);box-shadow:0 0 6px var(--cyan-ghost)}
@@ -110,7 +110,7 @@ input[type="range"]{width:100%;-webkit-appearance:none;appearance:none;height:4p
   outline:none;border-radius:0}
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--cyan);border:none;cursor:pointer}
 .refresh-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);
-  font-family:var(--font-tech);font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;
+  font-family:var(--font-tech);font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:upperse;
   transition:all .2s;animation:glow-pulse 2s ease-in-out infinite}
 .refresh-btn:hover{background:var(--cyan-ghost)}
 .refresh-btn.refreshing{color:var(--gold);border-color:var(--gold);animation:none}
@@ -141,7 +141,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;hei
 .status-dot.restricted{background:var(--red);box-shadow:0 0 4px var(--red)}
 .status-dot.inactive{background:var(--text-dark)}
 .node-name{font-family:var(--font-mono);font-size:10px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.node-type{font-family:var(--font-tech);font-size:8px;padding:2px 5px;border:1px solid;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.node-type{font-family:var(--font-tech);font-size:8px;padding:2px 5px;border:1px solid;letter-spacing:1px;flex-shrink:0;text-transform:upperse}
 .node-type.airport{color:var(--cyan);border-color:var(--cyan-dim)}
 .node-type.seaport{color:var(--gold);border-color:var(--gold-dim)}
 .node-type.rail{color:var(--green);border-color:var(--green-dim)}
@@ -331,7 +331,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;hei
         <div class="field">
           <label>CONTRACT ADDRESS (CA)</label>
           <div class="ca-display">
-            <span id="ca-text" style="color:var(--text-dim);letter-spacing:2px">Soon</span>
+            <span id="ca-text" style="color:var(--text-dim);letter-spacing:2px">HMLUFs79ZcitoY2UwnQYKi4Cz5SqEzrJDm4sEtPKpump</span>
           </div>
         </div>
         <div class="field">
