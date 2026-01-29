@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$ISRAELMAP | Israel Infrastructure Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0f0d;--bg2:#0d1410;--bg3:#0a1612;--bg4:#0f1d17;
+  --cyan:#00f0ff;--cyan-dim:rgba(0,240,255,0.4);--cyan-ghost:rgba(0,240,255,0.08);
+  --gold:#f0c000;--gold-dim:rgba(240,192,0,0.4);
+  --green:#00ff66;--green-dim:rgba(0,255,102,0.4);
+  --red:#ff3344;--red-dim:rgba(255,51,68,0.4);
+  --text:#c0d0cc;--text-dim:#607068;--text-dark:#2a3a34;
+  --border:rgba(0,240,255,0.12);--border2:rgba(0,240,255,0.06);
+  --font-head:'Orbitron',monospace;--font-mono:'JetBrains Mono',monospace;--font-tech:'Share Tech Mono',monospace;
+  --speed:1;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:12px}
+body{display:flex;flex-direction:column}
+
+/* === CRT OVERLAY === */
+#crt-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px)}
+#crt-overlay::after{content:'';position:absolute;inset:0;background:rgba(0,240,255,0.008);animation:crt-flick .12s infinite}
+@keyframes crt-flick{0%,100%{opacity:.97}50%{opacity:1}}
+
+/* === BOOT SCREEN === */
+#boot-screen{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;align-items:center;justify-content:center;
+  transition:opacity .5s}
+#boot-screen.hidden{opacity:0;pointer-events:none}
+.boot-lines{font-family:var(--font-mono);font-size:13px;color:var(--green);max-width:500px;padding:40px}
+.boot-line{opacity:0;margin:6px 0;transition:opacity .15s}
+.boot-line.visible{opacity:1}
+.boot-line.success{color:var(--cyan);font-weight:700}
+
+/* === LAYOUT === */
+#app{display:flex;flex-direction:column;height:100vh;opacity:0;transition:opacity .4s}
+#app.visible{opacity:1}
+.content{display:flex;flex:1;min-height:0;overflow:hidden}
+
+/* === HEADER === */
+.header{display:flex;align-items:center;padding:0 16px;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);position:relative;gap:16px;flex-shrink:0}
+.header::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),var(--gold),var(--cyan),transparent);background-size:200% 100%;
+  animation:grad-slide 3s linear infinite}
+@keyframes grad-slide{to{background-position:200% 0}}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo svg{display:block}
+.header-title{display:flex;flex-direction:column;gap:2px}
+.header-title h1{font-family:var(--font-head);font-size:16px;font-weight:900;letter-spacing:3px;color:var(--cyan);position:relative}
+.subtitle{font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase}
+.header-nav{display:flex;gap:2px;margin-left:auto}
+.nav-tab{font-family:var(--font-tech);font-size:10px;letter-spacing:2px;padding:8px 16px;background:transparent;border:1px solid transparent;
+  color:var(--text-dim);cursor:pointer;text-transform:uppercase;transition:all .2s}
+.nav-tab:hover{color:var(--text);border-color:var(--border)}
+.nav-tab.active{color:var(--cyan);border-color:var(--cyan);background:var(--cyan-ghost)}
+.header-actions{display:flex;gap:6px}
+.action-btn{font-family:var(--font-tech);font-size:9px;letter-spacing:1px;padding:6px 12px;background:transparent;
+  border:1px solid var(--border);color:var(--text-dim);cursor:pointer;text-transform:uppercase;transition:all .2s}
+.action-btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px var(--cyan-ghost)}
+.header-x-link{display:flex;align-items:center;padding:6px;border:1px solid var(--border);transition:all .2s;border-radius:0}
+.header-x-link:hover{border-color:var(--cyan);background:var(--cyan-ghost)}
+.header-x-link:hover svg{fill:var(--cyan)}
+
+/* === GLITCH === */
+.glitch{position:relative}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}
+.glitch::before{color:var(--red);z-index:-1;animation:g1 4s infinite linear alternate-reverse}
+.glitch::after{color:var(--green);z-index:-1;animation:g2 4s infinite linear alternate-reverse}
+@keyframes g1{0%,80%,100%{clip-path:inset(0 0 100% 0);transform:translate(0)}82%{clip-path:inset(20% 0 50% 0);transform:translate(-3px)}
+  84%{clip-path:inset(60% 0 10% 0);transform:translate(3px)}86%,91%{clip-path:inset(0 0 100% 0);transform:translate(0)}
+  92%{clip-path:inset(40% 0 30% 0);transform:translate(-2px)}94%{clip-path:inset(0 0 100% 0);transform:translate(0)}}
+@keyframes g2{0%,75%,100%{clip-path:inset(0 0 100% 0);transform:translate(0)}77%{clip-path:inset(70% 0 5% 0);transform:translate(3px)}
+  79%{clip-path:inset(10% 0 70% 0);transform:translate(-3px)}81%,87%{clip-path:inset(0 0 100% 0);transform:translate(0)}
+  88%{clip-path:inset(30% 0 40% 0);transform:translate(2px)}90%{clip-path:inset(0 0 100% 0);transform:translate(0)}}
+
+/* === SIDEBAR === */
+.sidebar{width:310px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:var(--bg)}
+.sidebar::-webkit-scrollbar-thumb{background:var(--text-dark);border-radius:2px}
+.panel{padding:12px 14px;border-bottom:1px solid var(--border)}
+.panel-header{font-family:var(--font-head);font-size:9px;font-weight:700;color:var(--cyan);letter-spacing:2px;
+  padding-bottom:8px;margin-bottom:10px;border-bottom:1px dashed var(--border2);display:flex;align-items:center;justify-content:space-between}
+.panel-header .badge{font-family:var(--font-mono);font-size:9px;color:var(--gold);background:rgba(240,192,0,0.1);
+  padding:2px 6px;border:1px solid var(--gold-dim);letter-spacing:1px}
+
+/* === CONTROL PANEL === */
+.field{margin-bottom:10px}
+.field label{display:block;font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.ca-display{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);padding:6px 8px}
+.ca-display span{font-family:var(--font-mono);font-size:11px;color:var(--gold);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-btn{font-family:var(--font-tech);font-size:8px;letter-spacing:1px;padding:3px 8px;background:transparent;
+  border:1px solid var(--cyan-dim);color:var(--cyan);cursor:pointer;transition:all .2s;flex-shrink:0}
+.copy-btn:hover{background:var(--cyan-ghost);box-shadow:0 0 6px var(--cyan-ghost)}
+.copy-btn.copied{border-color:var(--green);color:var(--green)}
+input[type="text"],select{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none;transition:border-color .2s}
+input[type="text"]:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 8px var(--cyan-ghost)}
+input[type="text"]::placeholder{color:var(--text-dark)}
+select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23607068'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
+select option{background:var(--bg);color:var(--text)}
+input[type="range"]{width:100%;-webkit-appearance:none;appearance:none;height:4px;background:var(--bg);border:1px solid var(--border2);
+  outline:none;border-radius:0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--cyan);border:none;cursor:pointer}
+.refresh-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);
+  font-family:var(--font-tech);font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;
+  transition:all .2s;animation:glow-pulse 2s ease-in-out infinite}
+.refresh-btn:hover{background:var(--cyan-ghost)}
+.refresh-btn.refreshing{color:var(--gold);border-color:var(--gold);animation:none}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 5px rgba(0,240,255,0.2)}50%{box-shadow:0 0 15px rgba(0,240,255,0.5),0 0 30px rgba(0,240,255,0.15)}}
+
+/* === DATA READOUT === */
+.readout-field{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border2)}
+.readout-label{font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:1px;flex-shrink:0}
+.readout-value{font-family:var(--font-mono);font-size:11px;color:var(--text);text-align:right}
+.readout-value.active{color:var(--green)}
+.readout-value.warn{color:var(--gold)}
+.readout-value.typing::after{content:'_';animation:blink-cursor .6s step-end infinite}
+@keyframes blink-cursor{0%,100%{opacity:1}50%{opacity:0}}
+.trend-section{margin-top:10px}
+.trend-chart{font-family:var(--font-mono);font-size:9px;color:var(--text-dark);text-align:center;
+  padding:14px;border:1px dashed var(--border2);margin-top:6px;letter-spacing:1px}
+
+/* === NODES LIST === */
+.nodes-panel{flex:1;min-height:0;display:flex;flex-direction:column}
+.nodes-list{flex:1;overflow-y:auto;min-height:0}
+.nodes-list::-webkit-scrollbar{width:3px}
+.nodes-list::-webkit-scrollbar-thumb{background:var(--text-dark)}
+.node-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border2);cursor:pointer;transition:all .15s}
+.node-item:hover{background:var(--cyan-ghost);box-shadow:inset 0 0 20px var(--cyan-ghost)}
+.node-item.selected{background:rgba(0,240,255,0.06);border-left:2px solid var(--cyan)}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.status-dot.active{background:var(--green);box-shadow:0 0 4px var(--green)}
+.status-dot.restricted{background:var(--red);box-shadow:0 0 4px var(--red)}
+.status-dot.inactive{background:var(--text-dark)}
+.node-name{font-family:var(--font-mono);font-size:10px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node-type{font-family:var(--font-tech);font-size:8px;padding:2px 5px;border:1px solid;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.node-type.airport{color:var(--cyan);border-color:var(--cyan-dim)}
+.node-type.seaport{color:var(--gold);border-color:var(--gold-dim)}
+.node-type.rail{color:var(--green);border-color:var(--green-dim)}
+.node-type.border{color:var(--red);border-color:var(--red-dim)}
+
+/* === TOKEN PANEL === */
+.token-panel{border-bottom:none;background:rgba(240,192,0,0.03)}
+.token-panel .panel-header{color:var(--gold)}
+.token-address{display:flex;align-items:center;gap:6px;font-size:10px;margin-bottom:8px}
+.token-address span:first-child{color:var(--text-dim);font-size:9px}
+.token-address .ca-val{color:var(--gold);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.buy-btn{display:block;width:100%;padding:10px;background:linear-gradient(135deg,#f0c000,#e8a000);color:var(--bg);
+  font-family:var(--font-head);font-size:11px;font-weight:700;text-align:center;text-decoration:none;
+  letter-spacing:2px;border:none;cursor:pointer;transition:all .2s;animation:gold-glow 2s ease-in-out infinite}
+.buy-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+@keyframes gold-glow{0%,100%{box-shadow:0 0 8px rgba(240,192,0,0.3)}50%{box-shadow:0 0 20px rgba(240,192,0,0.6),0 0 40px rgba(240,192,0,0.15)}}
+.holder-info{font-family:var(--font-tech);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:8px;text-align:center}
+.holder-info span{color:var(--gold);font-weight:700}
+
+/* === MAP AREA === */
+.map-area{flex:1;display:flex;flex-direction:column;background:var(--bg);position:relative;min-width:0}
+.map-wrapper{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.map-wrapper::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 40%,rgba(10,15,13,0.6) 100%);pointer-events:none;z-index:2}
+#israel-map{height:92%;max-width:90%;position:relative;z-index:1}
+
+/* === SVG STYLES === */
+.israel-outline{fill:rgba(0,240,255,0.025);stroke:var(--cyan);stroke-width:1.5;filter:url(#glow)}
+.coord-label{font-family:'Share Tech Mono',monospace;font-size:6px;fill:rgba(0,240,255,0.25)}
+.water-label{font-family:'Share Tech Mono',monospace;font-size:5px;fill:rgba(0,240,255,0.2)}
+.water-label.large{font-size:7px;letter-spacing:3px}
+.watermark{font-family:'Orbitron',sans-serif;font-size:36px;fill:rgba(0,240,255,0.02);letter-spacing:8px}
+.route-line{fill:none;stroke:var(--cyan);stroke-width:1;stroke-dasharray:6 4;opacity:.45;
+  animation:route-dash calc(1.5s * var(--speed)) linear infinite}
+@keyframes route-dash{to{stroke-dashoffset:-20}}
+.pulse-ring{fill:none;stroke:var(--cyan);stroke-width:1;transform-box:fill-box;transform-origin:center;
+  animation:pulse-expand calc(2s * var(--speed)) ease-out infinite}
+.pulse-ring.delay{animation-delay:calc(1s * var(--speed))}
+.pulse-ring.seaport{stroke:var(--gold)}
+.pulse-ring.rail{stroke:var(--green)}
+.pulse-ring.border{stroke:var(--red)}
+@keyframes pulse-expand{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.8);opacity:0}}
+.node-shape{transition:all .2s}
+.node-shape.airport{fill:var(--cyan)}
+.node-shape.seaport{fill:var(--gold)}
+.node-shape.rail{fill:var(--green)}
+.node-shape.border{fill:var(--red)}
+.node-marker{cursor:pointer}
+.node-marker:hover .node-shape{filter:url(#glow-strong);transform:scale(1.3)}
+.node-marker.selected .node-shape{filter:url(#glow-strong)}
+.map-label{font-family:'Share Tech Mono',monospace;font-size:5.5px;fill:var(--cyan);letter-spacing:0.5px}
+.map-label.seaport{fill:var(--gold)}
+.map-label.rail{fill:var(--green)}
+.map-label.border{fill:var(--red)}
+
+/* === RADAR SWEEP === */
+.radar-sweep{position:absolute;top:50%;left:50%;width:280px;height:280px;border-radius:50%;
+  transform:translate(-50%,-50%);pointer-events:none;z-index:1;
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(0,240,255,0.06) 40deg,transparent 80deg);
+  animation:radar-rotate calc(4s * var(--speed)) linear infinite}
+.radar-sweep::before{content:'';position:absolute;inset:0;border-radius:50%;border:1px solid rgba(0,240,255,0.06)}
+.radar-sweep::after{content:'';position:absolute;inset:25%;border-radius:50%;border:1px solid rgba(0,240,255,0.04)}
+@keyframes radar-rotate{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* === COMPASS === */
+.compass{position:absolute;top:16px;right:16px;z-index:3}
+.compass svg{display:block}
+
+/* === MAP STATUS === */
+.map-status{display:flex;align-items:center;gap:12px;padding:6px 14px;background:var(--bg2);border-top:1px solid var(--border);
+  font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:1px;flex-shrink:0}
+.map-status .divider{color:var(--text-dark)}
+.map-status .status-on{color:var(--green)}
+
+/* === FILTER BAR === */
+.filter-bar{display:flex;gap:4px;padding:8px 14px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0}
+.filter-btn{font-family:var(--font-tech);font-size:9px;letter-spacing:1px;padding:5px 12px;
+  background:transparent;border:1px solid rgba(0,240,255,0.25);color:rgba(0,240,255,0.5);cursor:pointer;transition:all .2s}
+.filter-btn.active{background:rgba(0,240,255,0.1);color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 6px var(--cyan-ghost)}
+.filter-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* === STATS BAR === */
+.stats-bar{display:flex;align-items:center;justify-content:center;background:var(--bg2);border-top:1px solid var(--border);
+  padding:6px 20px;gap:40px;flex-shrink:0}
+.stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat-label{font-family:var(--font-tech);font-size:8px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+.stat-value{font-family:var(--font-head);font-size:16px;color:var(--cyan);font-weight:700;letter-spacing:1px}
+
+/* === FOOTER === */
+.footer{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg2);
+  border-top:1px solid var(--border);flex-shrink:0}
+.footer-links{display:flex;gap:16px}
+.footer-links a{font-family:var(--font-tech);font-size:9px;color:var(--text-dim);letter-spacing:1px;
+  text-decoration:none;text-transform:uppercase;transition:color .2s}
+.footer-links a:hover{color:var(--cyan)}
+.disclaimer{font-family:var(--font-mono);font-size:8px;color:var(--text-dark);letter-spacing:0.5px}
+.version{font-family:var(--font-tech);font-size:9px;color:var(--text-dark);letter-spacing:1px}
+
+/* === TOOLTIP === */
+.map-tooltip{position:fixed;pointer-events:none;z-index:100;background:rgba(10,20,16,0.95);border:1px solid var(--cyan);
+  padding:6px 10px;font-family:var(--font-mono);font-size:10px;color:var(--cyan);display:none;
+  box-shadow:0 0 12px var(--cyan-ghost);white-space:nowrap}
+
+/* === RESPONSIVE === */
+@media(max-width:900px){
+  .sidebar{width:240px}
+  .header-actions{display:none}
+  .stats-bar{gap:20px}
+  .stat-value{font-size:14px}
+}
+@media(max-width:700px){
+  .sidebar{display:none}
+  .header-nav{display:none}
+  .stats-bar{flex-wrap:wrap;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div id="crt-overlay"></div>
+
+<!-- BOOT SCREEN -->
+<div id="boot-screen">
+  <div class="boot-lines">
+    <div class="boot-line">> SYSTEM BOOT v1.0.0</div>
+    <div class="boot-line">> INITIALIZING OSINT MODULE...</div>
+    <div class="boot-line">> LOADING GEOSPATIAL DATA...</div>
+    <div class="boot-line">> CONNECTING TO NODE NETWORK...</div>
+    <div class="boot-line">> INFRASTRUCTURE NODES: 18 DETECTED</div>
+    <div class="boot-line">> ACTIVE ROUTES: 8 MAPPED</div>
+    <div class="boot-line">> ALL SYSTEMS OPERATIONAL</div>
+    <div class="boot-line success">> LAUNCHING DASHBOARD...</div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="map-tooltip" id="tooltip"></div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" width="32" height="32">
+          <polygon points="20,3 36,12 36,28 20,37 4,28 4,12" fill="none" stroke="var(--cyan)" stroke-width="1.2" opacity=".6"/>
+          <polygon points="20,8 30,14 30,26 20,32 10,26 10,14" fill="none" stroke="var(--cyan)" stroke-width="0.8" opacity=".3"/>
+          <circle cx="20" cy="20" r="3" fill="var(--cyan)" opacity=".8"/>
+          <line x1="20" y1="20" x2="20" y2="10" stroke="var(--cyan)" stroke-width="1" opacity=".5">
+            <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="4s" repeatCount="indefinite"/>
+          </line>
+        </svg>
+      </div>
+      <div class="header-title">
+        <h1 class="glitch" data-text="$ISRAELMAP">$ISRAELMAP</h1>
+        <span class="subtitle">REAL-TIME LOGISTICS &amp; NODE MONITORING</span>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <button class="nav-tab active" data-tab="transport">TRANSPORTATION</button>
+      <button class="nav-tab" data-tab="map">ISRAEL MAP</button>
+      <button class="nav-tab" data-tab="feed">LIVE FEED</button>
+    </nav>
+    <a href="https://x.com/israelscan" target="_blank" rel="noopener" class="header-x-link" title="Follow on X">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--text-dim)">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    </a>
+    <div class="header-actions">
+      <button class="action-btn" onclick="resetView()">RESET VIEW</button>
+      <button class="action-btn" onclick="zoomMap(1.2)">ZOOM +</button>
+      <button class="action-btn" onclick="zoomMap(0.8)">ZOOM -</button>
+      <button class="action-btn">EXPORT</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- CONTROL PANEL -->
+      <div class="panel control-panel">
+        <div class="panel-header">CONTROL PANEL</div>
+        <div class="field">
+          <label>CONTRACT ADDRESS (CA)</label>
+          <div class="ca-display">
+            <span id="ca-text" style="color:var(--text-dim);letter-spacing:2px">Soon</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>SEARCH NODE / ROUTE / CODE</label>
+          <input type="text" id="search-input" placeholder="Enter query..." oninput="filterNodes(this.value)">
+        </div>
+        <div class="field">
+          <label>DATA INDICATOR</label>
+          <select id="indicator-select">
+            <option>INFRASTRUCTURE STATUS</option>
+            <option>TRAFFIC VOLUME</option>
+            <option>CAPACITY INDEX</option>
+            <option>SECURITY LEVEL</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>ANIMATION SPEED</label>
+          <input type="range" id="speed-slider" min="1" max="10" value="5" oninput="updateSpeed(this.value)">
+        </div>
+        <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">REFRESH DATA</button>
+      </div>
+
+      <!-- DATA READOUT -->
+      <div class="panel data-readout">
+        <div class="panel-header">DATA READOUT <span class="badge">LIVE</span></div>
+        <div class="readout-field">
+          <span class="readout-label">PROFILE</span>
+          <span class="readout-value" id="ro-profile">INFRASTRUCTURE NODE</span>
+        </div>
+        <div class="readout-field">
+          <span class="readout-label">INDICATOR</span>
+          <span class="readout-value" id="ro-indicator">OPERATIONAL STATUS</span>
+        </div>
+        <div class="readout-field">
+          <span class="readout-label">LATEST</span>
+          <span class="readout-value active" id="ro-latest">ACTIVE</span>
+        </div>
+        <div class="readout-field">
+          <span class="readout-label">YEAR</span>
+          <span class="readout-value" id="ro-year">2025</span>
+        </div>
+        <div class="readout-field">
+          <span class="readout-label">CATEGORY</span>
+          <span class="readout-value" id="ro-category">TRANSPORTATION</span>
+        </div>
+        <div class="readout-field">
+          <span class="readout-label">SELECTED</span>
+          <span class="readout-value" id="ro-selected">---</span>
+        </div>
+        <div class="trend-section">
+          <div class="panel-header" style="font-size:8px;margin-top:4px">TREND ANALYSIS</div>
+          <div class="trend-chart" id="trend-chart">NO DATA AVAILABLE</div>
+        </div>
+      </div>
+
+      <!-- DETECTED NODES -->
+      <div class="panel nodes-panel">
+        <div class="panel-header">DETECTED NODES <span class="badge" id="node-count-badge">18</span></div>
+        <div class="nodes-list" id="nodes-list"></div>
+      </div>
+
+      <!-- TOKEN PANEL -->
+      <div class="panel token-panel">
+        <div class="panel-header" style="color:var(--gold)">$ISRAELMAP TOKEN</div>
+        <div class="token-address">
+          <span>CA:</span>
+          <span class="ca-val" style="color:var(--text-dim);letter-spacing:2px">Soon</span>
+        </div>
+        <a href="https://pump.fun" target="_blank" rel="noopener" class="buy-btn">BUY ON PUMP.FUN</a>
+      </div>
+
+    </aside>
+
+    <!-- MAP AREA -->
+    <main class="map-area">
+      <div class="map-wrapper">
+
+        <!-- RADAR SWEEP -->
+        <div class="radar-sweep"></div>
+
+        <!-- COMPASS -->
+        <div class="compass">
+          <svg viewBox="0 0 60 60" width="48" height="48">
+            <circle cx="30" cy="30" r="28" fill="none" stroke="var(--cyan)" stroke-width=".4" opacity=".25"/>
+            <circle cx="30" cy="30" r="18" fill="none" stroke="var(--cyan)" stroke-width=".3" opacity=".15"/>
+            <line x1="30" y1="4" x2="30" y2="56" stroke="var(--cyan)" stroke-width=".3" opacity=".2"/>
+            <line x1="4" y1="30" x2="56" y2="30" stroke="var(--cyan)" stroke-width=".3" opacity=".2"/>
+            <text x="30" y="12" text-anchor="middle" fill="var(--cyan)" font-family="Share Tech Mono" font-size="7" opacity=".7">N</text>
+            <text x="30" y="54" text-anchor="middle" fill="var(--cyan)" font-family="Share Tech Mono" font-size="7" opacity=".4">S</text>
+            <text x="8" y="33" text-anchor="middle" fill="var(--cyan)" font-family="Share Tech Mono" font-size="7" opacity=".4">W</text>
+            <text x="52" y="33" text-anchor="middle" fill="var(--cyan)" font-family="Share Tech Mono" font-size="7" opacity=".4">E</text>
+            <polygon points="30,14 27,22 33,22" fill="var(--red)" opacity=".7"/>
+            <polygon points="30,46 27,38 33,38" fill="var(--text-dim)" opacity=".5"/>
+          </svg>
+        </div>
+
+        <!-- SVG MAP -->
+        <svg id="israel-map" viewBox="0 0 240 520" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(0,240,255,0.05)" stroke-width="0.5"/>
+            </pattern>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-strong">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- GRID BG -->
+          <rect width="240" height="520" fill="url(#grid)"/>
+
+          <!-- COORD GRID LINES -->
+          <line x1="0" y1="52" x2="240" y2="52" stroke="rgba(0,240,255,0.07)" stroke-width=".5" stroke-dasharray="4 4"/>
+          <line x1="0" y1="162" x2="240" y2="162" stroke="rgba(0,240,255,0.07)" stroke-width=".5" stroke-dasharray="4 4"/>
+          <line x1="0" y1="282" x2="240" y2="282" stroke="rgba(0,240,255,0.07)" stroke-width=".5" stroke-dasharray="4 4"/>
+          <line x1="0" y1="402" x2="240" y2="402" stroke="rgba(0,240,255,0.07)" stroke-width=".5" stroke-dasharray="4 4"/>
+          <line x1="60" y1="0" x2="60" y2="520" stroke="rgba(0,240,255,0.07)" stroke-width=".5" stroke-dasharray="4 4"/>
+          <line x1="140" y1="0" x2="140" y2="520" stroke="rgba(0,240,255,0.07)" stroke-width=".5" stroke-dasharray="4 4"/>
+
+          <!-- COORD LABELS -->
+          <text x="3" y="50" class="coord-label">33.0N</text>
+          <text x="3" y="160" class="coord-label">32.0N</text>
+          <text x="3" y="280" class="coord-label">31.0N</text>
+          <text x="3" y="400" class="coord-label">30.0N</text>
+          <text x="52" y="515" class="coord-label">34.5E</text>
+          <text x="132" y="515" class="coord-label">35.5E</text>
+
+          <!-- CLASSIFIED WATERMARK -->
+          <text transform="translate(120,280) rotate(-30)" class="watermark">CLASSIFIED</text>
+
+          <!-- ISRAEL OUTLINE -->
+          <path class="israel-outline" d="
+            M 108,42
+            L 102,55 L 94,66 L 90,78 L 86,90 L 82,102 L 78,114 L 74,126 L 70,136 L 66,146
+            L 62,156 L 56,168 L 50,180 L 44,190 L 38,200
+            L 30,218 L 25,236 L 28,260 L 34,290 L 42,320 L 55,355 L 70,390 L 84,425 L 95,450 L 100,465
+            L 106,448 L 112,428 L 118,405 L 124,380 L 130,355 L 136,325 L 140,295 L 144,268
+            L 148,248 L 150,232 L 152,215 L 150,198 L 148,185
+            L 150,170 L 148,155 L 146,142 L 145,130 L 146,118
+            L 150,105 L 156,92 L 162,80 L 168,70 L 174,58 L 180,46 L 182,38
+            L 178,30 L 172,24 L 164,20 L 155,18 L 146,20 L 138,24 L 128,30 L 118,36 L 108,42
+          Z"/>
+
+          <!-- SEA OF GALILEE -->
+          <ellipse cx="153" cy="88" rx="6" ry="8" fill="rgba(0,100,180,0.12)" stroke="rgba(0,240,255,0.15)" stroke-width=".5"/>
+          <text x="164" y="90" class="water-label">Sea of</text>
+          <text x="164" y="96" class="water-label">Galilee</text>
+
+          <!-- DEAD SEA -->
+          <ellipse cx="150" cy="222" rx="4" ry="20" fill="rgba(0,100,180,0.12)" stroke="rgba(0,240,255,0.15)" stroke-width=".5"/>
+          <text x="158" y="224" class="water-label">Dead Sea</text>
+
+          <!-- MEDITERRANEAN LABEL -->
+          <text transform="translate(32,130) rotate(-78)" class="water-label large" style="letter-spacing:4px">MEDITERRANEAN</text>
+
+          <!-- ROUTES -->
+          <g class="routes" id="route-group">
+            <path class="route-line" d="M 70,148 Q 95,158 120,178"/>
+            <path class="route-line" d="M 70,148 L 74,126 L 82,102 L 90,78 L 94,68"/>
+            <path class="route-line" d="M 70,148 L 66,176 L 64,210 L 62,250"/>
+            <path class="route-line" d="M 62,250 L 68,310 L 80,385 L 100,462"/>
+            <path class="route-line" d="M 94,68 L 100,55 L 108,42"/>
+            <path class="route-line" d="M 120,178 L 135,178 L 150,178"/>
+            <path class="route-line" d="M 94,68 L 112,88 L 145,118"/>
+            <path class="route-line" d="M 70,148 L 60,162 L 52,174"/>
+          </g>
+
+          <!-- AIRPORT NODES -->
+          <g class="airport-nodes" id="airport-nodes">
+            <g class="node-marker" data-name="Ben Gurion Airport" data-type="airport" data-code="TLV" transform="translate(82,152)">
+              <circle class="pulse-ring" r="6"/><circle class="pulse-ring delay" r="6"/>
+              <rect class="node-shape airport" x="-4" y="-4" width="8" height="8" transform="rotate(45)"/>
+              <text class="map-label" y="14" text-anchor="middle">TLV</text>
+            </g>
+            <g class="node-marker" data-name="Ramon Airport" data-type="airport" data-code="ETM" transform="translate(88,418)">
+              <circle class="pulse-ring" r="6"/><circle class="pulse-ring delay" r="6"/>
+              <rect class="node-shape airport" x="-4" y="-4" width="8" height="8" transform="rotate(45)"/>
+              <text class="map-label" y="14" text-anchor="middle">ETM</text>
+            </g>
+            <g class="node-marker" data-name="Haifa Airport" data-type="airport" data-code="HFA" transform="translate(100,72)">
+              <circle class="pulse-ring" r="6"/><circle class="pulse-ring delay" r="6"/>
+              <rect class="node-shape airport" x="-4" y="-4" width="8" height="8" transform="rotate(45)"/>
+              <text class="map-label" y="14" text-anchor="middle">HFA</text>
+            </g>
+            <g class="node-marker" data-name="Sde Dov Airfield" data-type="airport" data-code="SDV" transform="translate(65,142)">
+              <circle class="pulse-ring" r="6"/><circle class="pulse-ring delay" r="6"/>
+              <rect class="node-shape airport" x="-3" y="-3" width="6" height="6" transform="rotate(45)"/>
+              <text class="map-label" y="12" text-anchor="middle">SDV</text>
+            </g>
+          </g>
+
+          <!-- SEAPORT NODES -->
+          <g class="seaport-nodes" id="seaport-nodes">
+            <g class="node-marker" data-name="Haifa Port" data-type="seaport" data-code="HPT" transform="translate(92,62)">
+              <circle class="pulse-ring seaport" r="6"/><circle class="pulse-ring seaport delay" r="6"/>
+              <circle class="node-shape seaport" r="4"/>
+              <text class="map-label seaport" y="14" text-anchor="middle">HPT</text>
+            </g>
+            <g class="node-marker" data-name="Ashdod Port" data-type="seaport" data-code="APT" transform="translate(52,174)">
+              <circle class="pulse-ring seaport" r="6"/><circle class="pulse-ring seaport delay" r="6"/>
+              <circle class="node-shape seaport" r="4"/>
+              <text class="map-label seaport" y="14" text-anchor="middle">APT</text>
+            </g>
+            <g class="node-marker" data-name="Eilat Port" data-type="seaport" data-code="EPT" transform="translate(100,462)">
+              <circle class="pulse-ring seaport" r="6"/><circle class="pulse-ring seaport delay" r="6"/>
+              <circle class="node-shape seaport" r="4"/>
+              <text class="map-label seaport" y="14" text-anchor="middle">EPT</text>
+            </g>
+          </g>
+
+          <!-- RAIL NODES -->
+          <g class="rail-nodes" id="rail-nodes">
+            <g class="node-marker" data-name="Tel Aviv Central" data-type="rail" data-code="TLV-R" transform="translate(70,148)">
+              <circle class="pulse-ring rail" r="6"/><circle class="pulse-ring rail delay" r="6"/>
+              <rect class="node-shape rail" x="-3" y="-3" width="6" height="6"/>
+              <text class="map-label rail" y="14" text-anchor="middle">TLV-R</text>
+            </g>
+            <g class="node-marker" data-name="Haifa Merkaz" data-type="rail" data-code="HFA-R" transform="translate(94,68)">
+              <circle class="pulse-ring rail" r="6"/><circle class="pulse-ring rail delay" r="6"/>
+              <rect class="node-shape rail" x="-3" y="-3" width="6" height="6"/>
+              <text class="map-label rail" y="14" text-anchor="middle">HFA-R</text>
+            </g>
+            <g class="node-marker" data-name="Beer Sheva North" data-type="rail" data-code="BSV" transform="translate(62,250)">
+              <circle class="pulse-ring rail" r="6"/><circle class="pulse-ring rail delay" r="6"/>
+              <rect class="node-shape rail" x="-3" y="-3" width="6" height="6"/>
+              <text class="map-label rail" y="14" text-anchor="middle">BSV</text>
+            </g>
+            <g class="node-marker" data-name="Jerusalem Navon" data-type="rail" data-code="JLM" transform="translate(120,178)">
+              <circle class="pulse-ring rail" r="6"/><circle class="pulse-ring rail delay" r="6"/>
+              <rect class="node-shape rail" x="-3" y="-3" width="6" height="6"/>
+              <text class="map-label rail" y="14" text-anchor="middle">JLM</text>
+            </g>
+          </g>
+
+          <!-- BORDER NODES -->
+          <g class="border-nodes" id="border-nodes">
+            <g class="node-marker" data-name="Rosh HaNikra" data-type="border" data-code="RHN" transform="translate(108,42)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">RHN</text>
+            </g>
+            <g class="node-marker" data-name="Erez Crossing" data-type="border" data-code="ERZ" transform="translate(38,200)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">ERZ</text>
+            </g>
+            <g class="node-marker" data-name="Allenby Bridge" data-type="border" data-code="ALB" transform="translate(150,178)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">ALB</text>
+            </g>
+            <g class="node-marker" data-name="Taba Crossing" data-type="border" data-code="TBA" transform="translate(98,465)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">TBA</text>
+            </g>
+            <g class="node-marker" data-name="Quneitra Gate" data-type="border" data-code="QNT" transform="translate(178,40)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">QNT</text>
+            </g>
+            <g class="node-marker" data-name="Nitzana Crossing" data-type="border" data-code="NTZ" transform="translate(30,275)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">NTZ</text>
+            </g>
+            <g class="node-marker" data-name="Jordan River Crossing" data-type="border" data-code="JRV" transform="translate(145,118)">
+              <circle class="pulse-ring border" r="6"/><circle class="pulse-ring border delay" r="6"/>
+              <polygon class="node-shape border" points="0,-5 4,3 -4,3"/>
+              <text class="map-label border" y="14" text-anchor="middle">JRV</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <!-- MAP STATUS BAR -->
+      <div class="map-status">
+        <span>RES: 1920x1080</span>
+        <span class="divider">|</span>
+        <span>STATUS: <span class="status-on">LOADED</span></span>
+        <span class="divider">|</span>
+        <span>SIGNAL: <span class="status-on">ACTIVE</span></span>
+        <span class="divider">|</span>
+        <span>NODES: <span id="visible-node-count">18</span></span>
+        <span class="divider">|</span>
+        <span>LAT: <span id="mouse-lat">--</span> LON: <span id="mouse-lon">--</span></span>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="airport" onclick="toggleFilter(this)">AIRPORTS</button>
+        <button class="filter-btn active" data-filter="seaport" onclick="toggleFilter(this)">SEAPORTS</button>
+        <button class="filter-btn active" data-filter="rail" onclick="toggleFilter(this)">RAIL</button>
+        <button class="filter-btn active" data-filter="border" onclick="toggleFilter(this)">BORDERS</button>
+        <button class="filter-btn active" data-filter="route" onclick="toggleFilter(this)">ROUTES</button>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-label">TOTAL NODES TRACKED</span>
+      <span class="stat-value counter" data-target="47">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">ACTIVE ROUTES</span>
+      <span class="stat-value counter" data-target="12">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">DATA POINTS</span>
+      <span class="stat-value counter" data-target="24891" id="data-points">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">LAST UPDATED</span>
+      <span class="stat-value" id="timestamp" style="font-size:13px">--:--:--</span>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://x.com/israelscan" target="_blank" rel="noopener">TWITTER / X</a>
+      <a href="https://pump.fun" target="_blank" rel="noopener">PUMP.FUN</a>
+    </div>
+    <div class="disclaimer">FOR EDUCATIONAL AND ANALYTICAL PURPOSES ONLY. NOT FINANCIAL ADVICE.</div>
+    <div class="version">v1.0.0 | BUILD 2025.01</div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ===== NODE DATA ===== */
+const NODES = [
+  {name:'Ben Gurion Airport',code:'TLV',type:'airport',status:'active'},
+  {name:'Ramon Airport',code:'ETM',type:'airport',status:'active'},
+  {name:'Haifa Airport',code:'HFA',type:'airport',status:'active'},
+  {name:'Sde Dov Airfield',code:'SDV',type:'airport',status:'inactive'},
+  {name:'Haifa Port',code:'HPT',type:'seaport',status:'active'},
+  {name:'Ashdod Port',code:'APT',type:'seaport',status:'active'},
+  {name:'Eilat Port',code:'EPT',type:'seaport',status:'active'},
+  {name:'Tel Aviv Central',code:'TLV-R',type:'rail',status:'active'},
+  {name:'Haifa Merkaz',code:'HFA-R',type:'rail',status:'active'},
+  {name:'Beer Sheva North',code:'BSV',type:'rail',status:'active'},
+  {name:'Jerusalem Navon',code:'JLM',type:'rail',status:'active'},
+  {name:'Rosh HaNikra',code:'RHN',type:'border',status:'active'},
+  {name:'Erez Crossing',code:'ERZ',type:'border',status:'restricted'},
+  {name:'Allenby Bridge',code:'ALB',type:'border',status:'active'},
+  {name:'Taba Crossing',code:'TBA',type:'border',status:'active'},
+  {name:'Quneitra Gate',code:'QNT',type:'border',status:'restricted'},
+  {name:'Nitzana Crossing',code:'NTZ',type:'border',status:'active'},
+  {name:'Jordan River Crossing',code:'JRV',type:'border',status:'active'}
+];
+
+let currentZoom = 1;
+
+/* ===== BOOT SEQUENCE ===== */
+function runBoot(){
+  const lines = document.querySelectorAll('.boot-line');
+  lines.forEach((line, i) => {
+    setTimeout(() => line.classList.add('visible'), 200 + i * 280);
+  });
+  setTimeout(() => {
+    document.getElementById('boot-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    setTimeout(initDashboard, 300);
+  }, 200 + lines.length * 280 + 600);
+}
+
+/* ===== INIT ===== */
+function initDashboard(){
+  populateNodesList();
+  animateCounters();
+  startTimestamp();
+  startLiveUpdates();
+  initMapInteractions();
+  initNavTabs();
+  generateTrendChart();
+}
+
+/* ===== POPULATE SIDEBAR NODES ===== */
+function populateNodesList(){
+  const list = document.getElementById('nodes-list');
+  list.innerHTML = NODES.map(n =>
+    '<div class="node-item" data-name="'+n.name+'" data-type="'+n.type+'" onclick="selectNode(\''+n.name.replace(/'/g,"\\'")+'\',\''+n.type+'\')">' +
+      '<span class="status-dot '+n.status+'"></span>' +
+      '<span class="node-name">'+n.name+'</span>' +
+      '<span class="node-type '+n.type+'">'+n.type.toUpperCase()+'</span>' +
+    '</div>'
+  ).join('');
+}
+
+/* ===== COUNTER ANIMATION ===== */
+function animateCounters(){
+  document.querySelectorAll('.counter').forEach(el => {
+    const target = parseInt(el.getAttribute('data-target'));
+    const start = performance.now();
+    const duration = 2000;
+    function tick(now){
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(target * ease).toLocaleString();
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+/* ===== TIMESTAMP ===== */
+function startTimestamp(){
+  function update(){
+    const d = new Date();
+    document.getElementById('timestamp').textContent =
+      d.toLocaleTimeString('en-GB',{hour12:false}) + '.' + String(d.getMilliseconds()).padStart(3,'0').slice(0,2);
+  }
+  update();
+  setInterval(update, 100);
+}
+
+/* ===== LIVE UPDATES ===== */
+function startLiveUpdates(){
+  setInterval(() => {
+    const el = document.getElementById('data-points');
+    const v = parseInt(el.textContent.replace(/,/g,'')) || 24891;
+    el.textContent = (v + Math.floor(Math.random()*7) + 1).toLocaleString();
+  }, 2500);
+
+  setInterval(() => {
+    const dots = document.querySelectorAll('.node-item .status-dot');
+    if(!dots.length) return;
+    const dot = dots[Math.floor(Math.random() * dots.length)];
+    if(!dot.classList.contains('restricted')){
+      const isActive = Math.random() > 0.1;
+      dot.className = 'status-dot ' + (isActive ? 'active' : 'inactive');
+    }
+  }, 4000);
+}
+
+/* ===== MAP INTERACTIONS ===== */
+function initMapInteractions(){
+  const tooltip = document.getElementById('tooltip');
+  document.querySelectorAll('.node-marker').forEach(marker => {
+    marker.addEventListener('mouseenter', function(e){
+      tooltip.textContent = this.getAttribute('data-name') + ' [' + this.getAttribute('data-code') + ']';
+      tooltip.style.display = 'block';
+    });
+    marker.addEventListener('mousemove', function(e){
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top = (e.clientY - 8) + 'px';
+    });
+    marker.addEventListener('mouseleave', function(){
+      tooltip.style.display = 'none';
+    });
+    marker.addEventListener('click', function(){
+      const name = this.getAttribute('data-name');
+      const type = this.getAttribute('data-type');
+      window.selectNode(name, type);
+    });
+  });
+
+  /* Mouse lat/lon simulation */
+  const mapEl = document.getElementById('israel-map');
+  mapEl.addEventListener('mousemove', function(e){
+    const rect = mapEl.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    const lat = (33.5 - y * 4.5).toFixed(2);
+    const lon = (34.0 + x * 2.0).toFixed(2);
+    document.getElementById('mouse-lat').textContent = lat;
+    document.getElementById('mouse-lon').textContent = lon;
+  });
+}
+
+/* ===== SELECT NODE ===== */
+window.selectNode = function(name, type){
+  document.querySelectorAll('.node-item').forEach(el => {
+    el.classList.toggle('selected', el.getAttribute('data-name') === name);
+  });
+  document.querySelectorAll('.node-marker').forEach(el => {
+    el.classList.toggle('selected', el.getAttribute('data-name') === name);
+  });
+  typeText(document.getElementById('ro-selected'), name);
+  typeText(document.getElementById('ro-category'), type.toUpperCase());
+
+  const node = NODES.find(n => n.name === name);
+  if(node){
+    const statusEl = document.getElementById('ro-latest');
+    statusEl.textContent = node.status.toUpperCase();
+    statusEl.className = 'readout-value ' + (node.status === 'active' ? 'active' : node.status === 'restricted' ? 'warn' : '');
+  }
+  generateTrendChart();
+};
+
+/* ===== TYPING EFFECT ===== */
+function typeText(el, text){
+  el.textContent = '';
+  el.classList.add('typing');
+  let i = 0;
+  const iv = setInterval(() => {
+    el.textContent += text[i];
+    i++;
+    if(i >= text.length){
+      clearInterval(iv);
+      el.classList.remove('typing');
+    }
+  }, 35);
+}
+
+/* ===== TREND CHART (ASCII) ===== */
+function generateTrendChart(){
+  const bars = [];
+  const chars = [' ','_','.','-','=','#'];
+  for(let i = 0; i < 20; i++){
+    const h = Math.floor(Math.random() * 5) + 1;
+    bars.push(chars[h]);
+  }
+  const line1 = '  ' + bars.map(() => chars[Math.floor(Math.random()*4)+1]).join('');
+  const line2 = '  ' + bars.join('');
+  document.getElementById('trend-chart').textContent = line1 + '\n' + line2 + '\n  [SIGNAL PATTERN]';
+}
+
+/* ===== NAV TABS ===== */
+function initNavTabs(){
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+}
+
+/* ===== FILTER TOGGLES ===== */
+window.toggleFilter = function(btn){
+  btn.classList.toggle('active');
+  const type = btn.getAttribute('data-filter');
+  if(type === 'route'){
+    const g = document.getElementById('route-group');
+    g.style.display = btn.classList.contains('active') ? '' : 'none';
+  } else {
+    const g = document.getElementById(type + '-nodes');
+    if(g) g.style.display = btn.classList.contains('active') ? '' : 'none';
+  }
+  updateVisibleCount();
+};
+
+function updateVisibleCount(){
+  let count = 0;
+  document.querySelectorAll('.node-marker').forEach(m => {
+    if(m.closest('g[id]') && m.closest('g[id]').style.display !== 'none') count++;
+  });
+  document.getElementById('visible-node-count').textContent = count;
+}
+
+/* ===== SEARCH ===== */
+window.filterNodes = function(q){
+  q = q.toLowerCase();
+  document.querySelectorAll('.node-item').forEach(item => {
+    const name = item.getAttribute('data-name').toLowerCase();
+    const type = item.getAttribute('data-type').toLowerCase();
+    item.style.display = (name.includes(q) || type.includes(q)) ? 'flex' : 'none';
+  });
+};
+
+/* ===== COPY ===== */
+window.copyText = function(btn){
+  const text = btn.getAttribute('data-copy');
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+  });
+};
+
+/* ===== REFRESH ===== */
+window.refreshData = function(){
+  const btn = document.getElementById('refresh-btn');
+  btn.textContent = 'REFRESHING...';
+  btn.classList.add('refreshing');
+  setTimeout(() => {
+    btn.textContent = 'REFRESH DATA';
+    btn.classList.remove('refreshing');
+    animateCounters();
+    generateTrendChart();
+  }, 1400);
+};
+
+/* ===== SPEED CONTROL ===== */
+window.updateSpeed = function(v){
+  const speed = (11 - v) / 5;
+  document.documentElement.style.setProperty('--speed', speed);
+};
+
+/* ===== ZOOM ===== */
+window.zoomMap = function(factor){
+  currentZoom *= factor;
+  currentZoom = Math.max(0.5, Math.min(3, currentZoom));
+  document.getElementById('israel-map').style.transform = 'scale(' + currentZoom + ')';
+  document.getElementById('israel-map').style.transition = 'transform 0.3s ease';
+};
+window.resetView = function(){
+  currentZoom = 1;
+  document.getElementById('israel-map').style.transform = 'scale(1)';
+};
+
+/* ===== START ===== */
+document.addEventListener('DOMContentLoaded', runBoot);
+
+})();
+</script>
+</body>
+</html>
